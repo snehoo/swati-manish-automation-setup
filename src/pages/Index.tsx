@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { OAuthButton } from "@/components/OAuthButton";
 import { OnboardingLayout } from "@/components/OnboardingLayout";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { Settings, CheckCircle2, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 type ConnectionStatus = {
@@ -177,10 +178,19 @@ const Index = () => {
   }
 
   return (
-    <OnboardingLayout 
-      title="Welcome to SwatiManish Automation Setup"
-      subtitle="Let's connect your accounts to get started with powerful automation workflows."
-    >
+    <div className="relative">
+      <div className="absolute top-4 right-4 z-10">
+        <Link to="/settings">
+          <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Settings className="w-4 h-4" />
+            Settings
+          </Button>
+        </Link>
+      </div>
+      <OnboardingLayout 
+        title="Welcome to SwatiManish Automation Setup"
+        subtitle="Let's connect your accounts to get started with powerful automation workflows."
+      >
       <ProgressIndicator 
         currentStep={currentStep}
         totalSteps={3}
@@ -254,6 +264,7 @@ const Index = () => {
         </p>
       </div>
     </OnboardingLayout>
+    </div>
   );
 };
 
