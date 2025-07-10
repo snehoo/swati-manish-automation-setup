@@ -40,25 +40,57 @@ export function OAuthDialog({ provider, onSuccess, children }: OAuthDialogProps)
   const handleStartAuth = () => {
     setIsLoading(true);
     
-    // For demo purposes, simulate OAuth flow without real client IDs
-    toast({
-      title: "OAuth Demo Mode",
-      description: "This is a demo. In production, you would need real OAuth client IDs from Google/Instagram.",
-    });
+    // Replace these with your actual OAuth client IDs
+    const clientId = provider === 'gmail' 
+      ? 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com' 
+      : 'YOUR_INSTAGRAM_CLIENT_ID';
     
-    // Simulate OAuth flow completion after 2 seconds
-    setTimeout(() => {
+    // Check if real client IDs are configured
+    if (clientId.includes('YOUR_')) {
       setIsLoading(false);
-      setStep('callback');
-      // Auto-fill a mock auth code for demo
-      const mockAuthCode = `${provider}_demo_auth_code_${Date.now()}`;
-      setAuthCode(mockAuthCode);
-      
       toast({
-        title: "Demo OAuth Completed",
-        description: "Mock authorization code has been generated. Click 'Complete Authentication' to continue.",
+        title: "OAuth Not Configured",
+        description: "Please replace the placeholder client IDs with your actual OAuth credentials in the code.",
+        variant: "destructive",
       });
-    }, 2000);
+      return;
+    }
+    
+    const redirectUri = encodeURIComponent(window.location.origin);
+    const scope = encodeURIComponent(scopes.join(' '));
+    const state = Math.random().toString(36).substring(2);
+    
+    const oauthUrl = `${authUrl}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${state}`;
+    
+    // Open popup window
+    const popup = window.open(
+      oauthUrl,
+      `${provider}-oauth`,
+      'width=500,height=600,scrollbars=yes,resizable=yes'
+    );
+    
+    if (!popup) {
+      setIsLoading(false);
+      toast({
+        title: "Popup Blocked",
+        description: "Please enable popups for this site and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Monitor popup for closure
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        setIsLoading(false);
+        setStep('callback');
+        toast({
+          title: "Authentication Window Closed",
+          description: "Copy the authorization code from the callback URL and paste it below.",
+        });
+      }
+    }, 1000);
   };
 
   const handleCodeSubmit = async () => {
