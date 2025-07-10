@@ -22,7 +22,7 @@ export function OAuthDialog({ provider, onSuccess, children }: OAuthDialogProps)
     gmail: {
       name: 'Gmail',
       icon: Mail,
-      authUrl: 'https://accounts.google.com/oauth/authorize',
+      authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
       scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
       color: 'text-red-500',
     },
@@ -40,59 +40,25 @@ export function OAuthDialog({ provider, onSuccess, children }: OAuthDialogProps)
   const handleStartAuth = () => {
     setIsLoading(true);
     
-    // Create OAuth URL with proper parameters
-    const clientId = provider === 'gmail' ? 'your-gmail-client-id' : 'your-instagram-client-id';
-    const redirectUri = encodeURIComponent(window.location.origin);
-    const scope = encodeURIComponent(scopes.join(' '));
-    const state = Math.random().toString(36).substring(2);
+    // For demo purposes, simulate OAuth flow without real client IDs
+    toast({
+      title: "OAuth Demo Mode",
+      description: "This is a demo. In production, you would need real OAuth client IDs from Google/Instagram.",
+    });
     
-    const oauthUrl = `${authUrl}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${state}`;
-    
-    // Open popup window
-    const popup = window.open(
-      oauthUrl,
-      `${provider}-oauth`,
-      'width=500,height=600,scrollbars=yes,resizable=yes'
-    );
-    
-    if (!popup) {
+    // Simulate OAuth flow completion after 2 seconds
+    setTimeout(() => {
       setIsLoading(false);
-      toast({
-        title: "Popup Blocked",
-        description: "Please enable popups for this site and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Monitor popup for closure or message
-    const checkClosed = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(checkClosed);
-        setIsLoading(false);
-        setStep('callback');
-        toast({
-          title: "Authentication Window Closed",
-          description: "Copy the authorization code from the callback URL and paste it below.",
-        });
-      }
-    }, 1000);
-    
-    // Listen for postMessage from popup (if implemented)
-    const messageListener = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
+      setStep('callback');
+      // Auto-fill a mock auth code for demo
+      const mockAuthCode = `${provider}_demo_auth_code_${Date.now()}`;
+      setAuthCode(mockAuthCode);
       
-      if (event.data.type === 'OAUTH_CODE' && event.data.provider === provider) {
-        clearInterval(checkClosed);
-        popup.close();
-        setAuthCode(event.data.code);
-        setStep('callback');
-        setIsLoading(false);
-        window.removeEventListener('message', messageListener);
-      }
-    };
-    
-    window.addEventListener('message', messageListener);
+      toast({
+        title: "Demo OAuth Completed",
+        description: "Mock authorization code has been generated. Click 'Complete Authentication' to continue.",
+      });
+    }, 2000);
   };
 
   const handleCodeSubmit = async () => {
