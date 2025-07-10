@@ -43,7 +43,7 @@ export function OAuthDialog({ provider, onSuccess, children }: OAuthDialogProps)
     // Replace these with your actual OAuth client IDs
     const clientId = provider === 'gmail' 
       ? '135806273687-60eo3g53crou2lsheubh2rkd3lqrarnm.apps.googleusercontent.com' 
-      : 'YOUR_INSTAGRAM_CLIENT_ID';
+      : '683590918005231';
     
     // Check if real client IDs are configured
     if (clientId.includes('YOUR_')) {
