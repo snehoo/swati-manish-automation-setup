@@ -40,15 +40,59 @@ export function OAuthDialog({ provider, onSuccess, children }: OAuthDialogProps)
   const handleStartAuth = () => {
     setIsLoading(true);
     
-    // Simulate OAuth flow
-    setTimeout(() => {
+    // Create OAuth URL with proper parameters
+    const clientId = provider === 'gmail' ? 'your-gmail-client-id' : 'your-instagram-client-id';
+    const redirectUri = encodeURIComponent(window.location.origin + '/oauth/callback');
+    const scope = encodeURIComponent(scopes.join(' '));
+    const state = Math.random().toString(36).substring(2);
+    
+    const oauthUrl = `${authUrl}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${state}`;
+    
+    // Open popup window
+    const popup = window.open(
+      oauthUrl,
+      `${provider}-oauth`,
+      'width=500,height=600,scrollbars=yes,resizable=yes'
+    );
+    
+    if (!popup) {
       setIsLoading(false);
-      setStep('callback');
       toast({
-        title: "OAuth Window Opened",
-        description: `Redirected to ${name} authentication. Copy the authorization code from the callback URL.`,
+        title: "Popup Blocked",
+        description: "Please enable popups for this site and try again.",
+        variant: "destructive",
       });
-    }, 1500);
+      return;
+    }
+    
+    // Monitor popup for closure or message
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        setIsLoading(false);
+        setStep('callback');
+        toast({
+          title: "Authentication Window Closed",
+          description: "Copy the authorization code from the callback URL and paste it below.",
+        });
+      }
+    }, 1000);
+    
+    // Listen for postMessage from popup (if implemented)
+    const messageListener = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'OAUTH_CODE' && event.data.provider === provider) {
+        clearInterval(checkClosed);
+        popup.close();
+        setAuthCode(event.data.code);
+        setStep('callback');
+        setIsLoading(false);
+        window.removeEventListener('message', messageListener);
+      }
+    };
+    
+    window.addEventListener('message', messageListener);
   };
 
   const handleCodeSubmit = async () => {
@@ -119,17 +163,20 @@ export function OAuthDialog({ provider, onSuccess, children }: OAuthDialogProps)
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
               <h4 className="font-medium">OAuth Flow Details</h4>
               <p className="text-sm text-muted-foreground">
-                <strong>Auth URL:</strong> {authUrl}
+                <strong>Provider:</strong> {name}
               </p>
               <p className="text-sm text-muted-foreground">
                 <strong>Scopes:</strong> {scopes.join(', ')}
+              </p>
+              <p className="text-sm text-muted-foreground text-yellow-600">
+                <strong>Note:</strong> This will open a popup window for authentication
               </p>
             </div>
             
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Click the button below to start the OAuth authentication flow. 
-                You'll be redirected to {name}'s authorization page.
+                Click the button below to open a popup window for {name} authentication. 
+                After authorizing, you'll be redirected to a callback URL with an authorization code.
               </p>
               
               <Button 
