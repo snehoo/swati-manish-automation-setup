@@ -42,7 +42,7 @@ export function OAuthDialog({ provider, onSuccess, children }: OAuthDialogProps)
     
     // Create OAuth URL with proper parameters
     const clientId = provider === 'gmail' ? 'your-gmail-client-id' : 'your-instagram-client-id';
-    const redirectUri = encodeURIComponent(window.location.origin + '/oauth/callback');
+    const redirectUri = encodeURIComponent(window.location.origin);
     const scope = encodeURIComponent(scopes.join(' '));
     const state = Math.random().toString(36).substring(2);
     
